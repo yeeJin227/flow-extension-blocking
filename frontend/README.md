@@ -142,7 +142,7 @@ await deleteCustomExtension(encodeURIComponent(customExtensionName));
 
 -----
 
-## 🎯 추가로 고려한 사항
+## 🎯 요건 이외로 추가로 고려한 사항
 
 
 ### 1. 실시간 입력 길이 및 개수 표시
