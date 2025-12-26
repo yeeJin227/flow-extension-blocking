@@ -27,12 +27,20 @@ export default function ExtensionManager() {
     try {
       setLoading(true);
       setError(null);
-      const [fixed, custom] = await Promise.all([
-        getFixedExtensions(),
-        getCustomExtensions(),
-      ]);
+      
+      // 고정 확장자와 커스텀 확장자를 별도로 로드 (커스텀 확장자 실패 시에도 고정 확장자는 표시)
+      const fixed = await getFixedExtensions();
       setFixedExtensions(fixed);
-      setCustomExtensions(custom);
+      
+      try {
+        const custom = await getCustomExtensions();
+        setCustomExtensions(custom);
+      } catch (customErr) {
+        // 커스텀 확장자 로드 실패 시 빈 배열로 설정하고 경고만 표시
+        console.error('커스텀 확장자 로드 실패:', customErr);
+        setCustomExtensions([]);
+        // 전체 오류로 표시하지 않고, 커스텀 확장자만 빈 상태로 유지
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '데이터 로드 실패');
     } finally {

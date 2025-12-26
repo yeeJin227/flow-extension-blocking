@@ -44,7 +44,17 @@ export async function getCustomExtensions(): Promise<CustomExtension[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/extensions/custom`);
     if (!response.ok) {
-      throw new Error(`커스텀 확장자 조회 실패 (${response.status}): ${response.statusText}`);
+      // 500 오류인 경우 서버 응답 본문에서 상세 오류 메시지 가져오기
+      let errorMessage = `커스텀 확장자 조회 실패 (${response.status}): ${response.statusText}`;
+      try {
+        const errorBody = await response.text();
+        if (errorBody) {
+          errorMessage += ` - ${errorBody}`;
+        }
+      } catch (e) {
+        // 응답 본문 파싱 실패 시 무시
+      }
+      throw new Error(errorMessage);
     }
     return response.json();
   } catch (error) {
