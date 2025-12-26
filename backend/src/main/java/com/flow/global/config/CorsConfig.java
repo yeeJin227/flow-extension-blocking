@@ -10,11 +10,12 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins(
-                        "http://localhost:3000", // 로컬 개발
-                        "https://flow-extension-blocking.vercel.app" // 배포 환경
+                .allowedOriginPatterns(
+                        "http://localhost:*", // 로컬 개발 (모든 포트)
+                        "https://*.vercel.app" // 모든 Vercel 도메인 (프로덕션 + 프리뷰)
                 )
                 .allowedMethods("GET", "POST", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }
