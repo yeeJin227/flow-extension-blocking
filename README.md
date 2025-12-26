@@ -52,39 +52,32 @@ flow/
 
 <br>
 
-## 🚀 실행 방법
+## 🚀 실행 방법 (배포용)
 
-### 1. Backend 실행
+### 2. Frontend
 
-```bash
-cd backend
-./gradlew bootRun
-```
+- 배포 URL: https://flow-extension-blocking.vercel.app/
+- 데이터베이스(supabase) 연동 모니터링 URL: https://flow-extension-blocking.vercel.app/test.html
 
-서버 실행 후 DB 확인: `http://localhost:8080/h2-console`
+### 1. Backend
 
-### 2. Frontend 실행
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-브라우저에서: `http://localhost:3000`
-
+- 배포 URL: https://flow-extension-blocking.onrender.com/api
+- 고정 확장자 조회 URL: https://flow-extension-blocking.onrender.com/api/extensions/fixed
+- 커스텀 확장자 조회 URL: https://flow-extension-blocking.onrender.com/api/extensions/custom
 
 <br>
 
 
 ## 📡 API 엔드포인트
 
-- `GET /api/extensions/fixed` - 고정 확장자 목록 조회
-- `POST /api/extensions/fixed` - 고정 확장자 체크 상태 업데이트
-- `GET /api/extensions/custom` - 커스텀 확장자 목록 조회
-- `POST /api/extensions/custom` - 커스텀 확장자 추가
-- `DELETE /api/extensions/custom/{customExtensionName}` - 커스텀 확장자 삭제
+### 고정 확장자
+- `GET /api/extensions/fixed` → 고정 확장자 목록 조회
+- `POST /api/extensions/fixed` → 고정 확장자 체크 상태 업데이트
 
+### 커스텀 확장자
+- `GET /api/extensions/custom` → 커스텀 확장자 목록 조회
+- `POST /api/extensions/custom` → 커스텀 확장자 추가
+- `DELETE /api/extensions/custom/{customExtensionName}` → 커스텀 확장자 삭제
 
 <br>
 
