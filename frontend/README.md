@@ -1,36 +1,279 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 확장자 차단 관리 과제 - 프론트엔드 개발 정리 
 
-## Getting Started
+## 📋 프로젝트 개요
 
-First, run the development server:
+파일 업로드 시 차단할 확장자를 관리하는 웹 애플리케이션입니다. 고정 확장자와 커스텀 확장자를 체크박스 및 입력 폼을 통해 관리할 수 있습니다.
+
+## 🛠 기술 스택
+
+- **Framework**: Next.js 16.1.1 (App Router)
+- **Language**: TypeScript 5
+- **UI**: Tailwind CSS 4
+- **State Management**: React Hooks (useState, useEffect)
+- **HTTP Client**: Fetch API
+
+## 📁 프로젝트 구조
+
+```
+frontend/
+├── app/
+│   ├── components/
+│   │   ├── ExtensionManager.tsx      # 메인 관리 컴포넌트
+│   │   ├── FixedExtensionList.tsx    # 고정 확장자 체크박스 리스트
+│   │   └── CustomExtensionInput.tsx  # 커스텀 확장자 입력 및 표시
+│   ├── lib/
+│   │   └── api.ts                    # API 호출 유틸리티 함수
+│   ├── types/
+│   │   └── extension.ts              # TypeScript 타입 정의
+│   ├── page.tsx                      # 메인 페이지
+│   └── layout.tsx                    # 레이아웃
+├── public/                           # 정적 파일
+└── package.json
+```
+
+## ✨ 구현된 기능
+
+### 1. 고정확장자 관리
+
+**요구사항**: 고정 확장자는 차단을 자주하는 확장자들 리스트이며, default는 unCheck 되어져 있습니다.
+
+**구현 내용**:
+- 애플리케이션 시작 시 백엔드 API를 통해 고정 확장자 목록을 조회
+- 각 확장자를 체크박스 형태로 표시
+- 초기 상태는 모두 `isCheck: false` (unCheck 상태)
+
+**코드 위치**: `app/components/FixedExtensionList.tsx`
+
+```typescript
+// 체크박스 상태 변경 시 즉시 API 호출
+<input
+  type="checkbox"
+  checked={extension.isCheck}
+  onChange={(e) => onToggle(extension.fixExtensionName, e.target.checked)}
+/>
+```
+
+### 2. 고정확장자의 체크상태를 DB에 저장, 유지
+
+**요구사항**: 고정 확장자를 check or uncheck를 할 경우 db에 저장됩니다. 이는 새로고침 시 유지되어야 합니다.
+
+**구현 내용**:
+- 체크박스 클릭 시 즉시 `POST /api/extensions/fixed` API 호출
+- Optimistic UI 업데이트로 즉각적인 UI 반영
+- 페이지 새로고침 시 `useEffect`를 통해 최신 상태를 DB에서 다시 로드
+
+**코드 위치**: `app/components/ExtensionManager.tsx`
+
+```typescript
+const handleFixedExtensionToggle = async (
+  fixExtensionName: string,
+  isCheck: boolean
+) => {
+  await updateFixedExtension(fixExtensionName, isCheck);
+  // Optimistic UI 업데이트
+  setFixedExtensions((prev) =>
+    prev.map((ext) =>
+      ext.fixExtensionName === fixExtensionName ? { ...ext, isCheck } : ext
+    )
+  );
+};
+```
+
+### 3. 커스텀확장자 최대 입력 길이 20자로 제한
+
+**요구사항**: 확장자 최대 입력 길이는 20자리
+
+**구현 내용**:
+- HTML `maxLength` 속성으로 입력 제한
+- 실시간으로 입력 길이 표시 (`{inputValue.length}/20자`)
+- 20자 초과 입력 시 자동으로 차단
+
+**코드 위치**: `app/components/CustomExtensionInput.tsx`
+
+```typescript
+const MAX_LENGTH = 20;
+
+<input
+  type="text"
+  value={inputValue}
+  onChange={(e) => {
+    const value = e.target.value;
+    if (value.length <= MAX_LENGTH) {
+      setInputValue(value);
+    }
+  }}
+  maxLength={MAX_LENGTH}
+/>
+```
+
+### 4. 커스텀확장자 추가 및 화면에 표시 
+
+**요구사항**: 추가 버튼 클릭 시, db에 저장되며 아래쪽 영역에 표현됩니다.
+
+**구현 내용**:
+- 입력 폼에서 확장자 입력 후 "추가" 버튼 클릭
+- `POST /api/extensions/custom` API 호출하여 DB에 저장
+- 성공 시 상태 업데이트하여 화면에 즉시 반영
+- 각 확장자를 작은 박스 형태로 표시
+
+**코드 위치**: `app/components/CustomExtensionInput.tsx`
+
+```typescript
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const trimmedValue = inputValue.trim().toLowerCase();
+  // 검증 후 API 호출
+  const newExtension = await addCustomExtension(trimmedValue);
+  // 상태 업데이트로 UI 반영
+};
+```
+
+### 5. 커스텀확장자 최대 개수 200개로 제한 
+
+**요구사항**: 커스텀 확장자는 최대 200개까지 추가가 가능
+
+**구현 내용**:
+- 프론트엔드에서 사전 검증 (200개 초과 시 경고 메시지)
+- 현재 개수 실시간 표시 (`현재 {extensions.length}/200개`)
+- 백엔드에서도 추가 검증 (이중 방어)
+
+**코드 위치**: `app/components/CustomExtensionInput.tsx`
+
+```typescript
+const MAX_COUNT = 200;
+
+if (extensions.length >= MAX_COUNT) {
+  alert(`커스텀 확장자는 최대 ${MAX_COUNT}개까지 추가할 수 있습니다.`);
+  return;
+}
+```
+
+### 6. X를 클릭하면 커스텀확장자 삭제 
+
+**요구사항**: 확장자 옆 x를 클릭 시 db에서 삭제됨
+
+**구현 내용**:
+- 각 확장자 박스 옆에 "×" 버튼 배치
+- 클릭 시 `DELETE /api/extensions/custom/{customExtensionName}` API 호출
+- URL 인코딩 처리 (`encodeURIComponent`)로 특수문자 확장자도 안전하게 삭제
+- 삭제 성공 시 상태에서 제거하여 UI 즉시 반영
+
+**코드 위치**: `app/lib/api.ts`, `app/components/CustomExtensionInput.tsx`
+
+```typescript
+// URL 인코딩 처리
+await deleteCustomExtension(encodeURIComponent(customExtensionName));
+```
+
+## 🎯 추가로 고려한 사항
+
+
+### 1. 실시간 입력 길이 및 개수 표시
+
+**구현 이유**: 사용자가 현재 입력 상태와 제한을 명확히 인지할 수 있도록 UX 개선
+
+**구현 내용**:
+- 입력 필드 아래에 `{현재 길이}/{최대 길이}자` 표시
+- 커스텀 확장자 목록 아래에 `현재 {개수}/{최대 개수}개` 표시
+
+### 2. 에러 처리 및 사용자 피드백
+
+**구현 내용**:
+- API 호출 실패 시 `try-catch`로 에러 처리
+- 사용자에게 `alert`를 통해 명확한 에러 메시지 제공
+- 로딩 상태 및 에러 상태 UI 제공
+
+**코드 위치**: `app/components/ExtensionManager.tsx`
+
+```typescript
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState<string | null>(null);
+
+if (loading) return <div>로딩 중...</div>;
+if (error) return <div>오류: {error}</div>;
+```
+
+### 3. Optimistic UI 업데이트
+
+**구현 이유**: 사용자 액션에 대한 즉각적인 피드백 제공으로 UX 향상
+
+**구현 내용**:
+- API 호출과 동시에 UI 상태를 먼저 업데이트
+- API 실패 시 이전 상태로 롤백 가능하도록 구현
+
+### 4. URL 인코딩 처리
+
+**구현 이유**: 확장자 이름에 특수문자(예: `+`, `#`, `%` 등)가 포함될 경우 URL 파라미터로 전달 시 문제 발생 가능
+
+**구현 내용**:
+- `encodeURIComponent()`를 사용하여 안전하게 URL 인코딩
+
+```typescript
+await deleteCustomExtension(encodeURIComponent(customExtensionName));
+```
+
+### 5. 병렬 데이터 로딩
+
+**구현 내용**:
+- `Promise.all()`을 사용하여 고정 확장자와 커스텀 확장자를 동시에 로드
+- 초기 로딩 시간 단축
+
+```typescript
+const [fixed, custom] = await Promise.all([
+  getFixedExtensions(),
+  getCustomExtensions(),
+]);
+```
+
+## 🚀 실행 방법
+
+### 1. 의존성 설치
+
+```bash
+npm install
+```
+
+### 2. 개발 서버 실행
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. 브라우저에서 [http://localhost:3000](http://localhost:3000) 접속
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## 🔌 API 엔드포인트
 
-To learn more about Next.js, take a look at the following resources:
+프론트엔드는 다음 백엔드 API를 사용합니다:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `GET /api/extensions/fixed` - 고정 확장자 목록 조회
+- `POST /api/extensions/fixed` - 고정 확장자 체크 상태 업데이트
+- `GET /api/extensions/custom` - 커스텀 확장자 목록 조회
+- `POST /api/extensions/custom` - 커스텀 확장자 추가
+- `DELETE /api/extensions/custom/{customExtensionName}` - 커스텀 확장자 삭제
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📝 주요 설계 결정
 
-## Deploy on Vercel
+### 1. Next.js App Router 사용
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- 최신 Next.js 기능 활용
+- Server Components와 Client Components 분리 (`'use client'` 지시어)
+- 파일 기반 라우팅으로 직관적인 구조
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 2. TypeScript 사용
+
+- 타입 안정성 확보
+- 인터페이스 정의로 데이터 구조 명확화
+- IDE 자동완성 및 에러 사전 방지
+
+### 3. Fetch API 사용
+
+- 별도 라이브러리 없이 네이티브 API 사용
+- Promise 기반 비동기 처리
+
+### 4. Tailwind CSS 사용
+
+- 유틸리티 퍼스트 CSS로 빠른 스타일링
+- 반응형 디자인 쉽게 구현
+- 일관된 디자인 시스템
