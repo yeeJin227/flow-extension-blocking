@@ -12,7 +12,7 @@ public class CorsConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedOrigins(
                         "http://localhost:3000", // 로컬 개발
-                        "https://flow-frontend.vercel.app" // 배포 환경
+                        "https://flow-extension-blocking.vercel.app" // 배포 환경
                 )
                 .allowedMethods("GET", "POST", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
