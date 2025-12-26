@@ -28,6 +28,7 @@ frontend/
 │   ├── page.tsx                      # 메인 페이지
 │   └── layout.tsx                    # 레이아웃
 ├── public/                           # 정적 파일
+│   └── test.html                     # supabase 데이터베이스 연동 페이지 (모니터링)
 └── package.json
 ```
 
@@ -186,19 +187,20 @@ await deleteCustomExtension(encodeURIComponent(customExtensionName));
 
 ## 🚀 실행 방법
 
-### 1. 의존성 설치
-
+### 1️⃣ 로컬 개발
+- 의존성 설치
 ```bash
 npm install
 ```
 
-### 2. 개발 서버 실행
-
+- 개발 서버 실행
 ```bash
 npm run dev
 ```
+- 브라우저에서 [http://localhost:3000](http://localhost:3000) 접속
 
-### 3. 브라우저에서 [http://localhost:3000](http://localhost:3000) 접속
+### 2️⃣ 배포 환경
+- Vercel 배포: https://flow-extension-blocking.vercel.app/
 
 -----
 
@@ -206,34 +208,20 @@ npm run dev
 
 프론트엔드는 다음 백엔드 API를 사용합니다:
 
-- `GET /api/extensions/fixed` - 고정 확장자 목록 조회
-- `POST /api/extensions/fixed` - 고정 확장자 체크 상태 업데이트
-- `GET /api/extensions/custom` - 커스텀 확장자 목록 조회
-- `POST /api/extensions/custom` - 커스텀 확장자 추가
-- `DELETE /api/extensions/custom/{customExtensionName}` - 커스텀 확장자 삭제
+### 고정 확장자
+- `GET /api/extensions/fixed` → 고정 확장자 목록 조회
+- `POST /api/extensions/fixed` → 고정 확장자 체크 상태 업데이트
+
+### 커스텀 확장자
+- `GET /api/extensions/custom` → 커스텀 확장자 목록 조회
+- `POST /api/extensions/custom` → 커스텀 확장자 추가
+- `DELETE /api/extensions/custom/{customExtensionName}` → 커스텀 확장자 삭제
 
 -----
 
 ## 📝 주요 설계 내용
 
-### 1. Next.js App Router 사용
-
-- 최신 Next.js 기능 활용
-- 파일 기반 라우팅으로 직관적인 구조
-
-### 2. TypeScript 사용
-
-- 타입 안정성 확보
-- 인터페이스 정의로 데이터 구조 명확화
-- IDE 자동완성 및 에러 사전 방지
-
-### 3. Fetch API 사용
-
-- 별도 라이브러리 없이 네이티브 API 사용
-- Promise 기반 비동기 처리
-
-### 4. Tailwind CSS 사용
-
-- 유틸리티 퍼스트 CSS로 빠른 스타일링
-- 반응형 디자인 쉽게 구현
-- 일관된 디자인 시스템
+- `Next.js App Router 사용`: 최신 Next.js 기능 활용, 파일 기반 라우팅으로 직관적인 구조
+- `TypeScript 사용`: 타입 안정성 확보, 인터페이스 정의로 데이터 구조 명확화, IDE 자동완성 및 에러 사전 방지
+- `Fetch API 사용`: 별도 라이브러리 없이 네이티브 API 사용, Promise 기반 비동기 처리
+- `Tailwind CSS 사용`: 유틸리티 퍼스트 CSS로 빠른 스타일링, 반응형 디자인 쉽게 구현, 일관된 디자인 시스템
