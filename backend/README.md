@@ -79,6 +79,7 @@ public void createFixedExtensions() {
 }
 ```
 
+-----
 
 
 ### 2. 고정 확장자의 체크 상태를 DB에 저장, 유지
@@ -126,7 +127,7 @@ public FixedExtensionResponseDto updateFixedExtension(FixedExtensionRequestDto r
 }
 ```
 
-
+-----
 
 ### 3. 커스텀 확장자 최대 입력 길이 20자로 제한
 
@@ -150,6 +151,8 @@ if (customExtensionName.length() > 20) {
     throw new IllegalArgumentException("확장자 이름은 최대 20자까지 입력 가능합니다.");
 }
 ```
+
+-----
 
 ### 4. 커스텀 확장자 DB에 추가 및 저장
 
@@ -178,6 +181,8 @@ public CustomExtensionResponseDto addCustomExtension(CustomExtensionRequestDto r
 }
 ```
 
+-----
+
 ### 5. 커스텀 확장자 최대 개수 200개로 제한
 
 **요구사항**: 
@@ -196,6 +201,8 @@ if (customExtensionRepository.count() >= MAX_CUSTOM_EXTENSION_COUNT) {
     throw new IllegalStateException("커스텀 확장자는 최대 200개까지 추가할 수 있습니다.");
 }
 ```
+
+-----
 
 ### 6. X를 클릭하면 커스텀확장자 DB에서 삭제
 
@@ -218,6 +225,9 @@ public void deleteCustomExtension(String customExtensionName) {
     customExtensionRepository.delete(customExtension);
 }
 ```
+
+----
+
 
 ## 🎯 요건 이외에 추가로 고려한 사항
 
@@ -242,42 +252,12 @@ if (customExtensionRepository.findByCustomExtensionName(customExtensionName).isP
 }
 ```
 
-### 2. 데이터베이스 제약 조건
-
-**구현 이유**: 
-- 애플리케이션 레벨 검증을 우회하더라도 데이터베이스에서 데이터 무결성 보장하기 위해
-
-**구현 내용**:
-- `@Column(unique = true)`로 데이터베이스 레벨에서 중복 방지
-- `@Column(nullable = false)`로 NULL 값 방지
-- `@Column(length = 20)`로 최대 길이 제한
+-----
 
 
-### 3. 트랜잭션 관리 
+### 2. 예외 처리 및 에러 메시지
 
 **구현 내용**:
-- `@Transactional` 어노테이션으로 데이터 일관성 보장
-- 읽기 전용 트랜잭션 (`@Transactional(readOnly = true)`)으로 성능 최적화
-- 쓰기 작업 시에만 쓰기 트랜잭션 사용
-
-**코드**:
-```java
-@Service
-@RequiredArgsConstructor
-@Transactional(readOnly = true)  // 기본은 읽기 전용
-public class CustomExtensionService {
-    
-    @Transactional  // 쓰기 작업은 명시적으로 쓰기 트랜잭션
-    public CustomExtensionResponseDto addCustomExtension(...) {
-        // ...
-    }
-}
-```
-
-### 4. 예외 처리 및 에러 메시지
-
-**구현 내용**:
-- 명확한 예외 메시지 제공
 - `IllegalArgumentException`: 잘못된 입력값 (중복, 길이 초과 등)
 - `IllegalStateException`: 비즈니스 로직 위반 (최대 개수 초과 등)
 
@@ -295,7 +275,10 @@ public ResponseEntity<CustomExtensionResponseDto> addCustomExtension(
 }
 ```
 
-### 5. CORS 설정
+----
+
+
+### 3. CORS 설정
 
 **구현 내용**:
 - `CorsConfig` 클래스에서 프론트엔드(`http://localhost:3000`) 허용
@@ -315,24 +298,18 @@ public class CorsConfig implements WebMvcConfigurer {
 }
 ```
 
-### 6. DTO 패턴 사용 
-
-**구현 이유**: 
-- Entity를 직접 노출하지 않고 DTO를 통해 데이터 전달로 보안 및 API 변경 시에도 유연성 확보 
-
-**구현 내용**:
-- Request DTO: 클라이언트로부터 받는 데이터
-- Response DTO: 클라이언트에게 반환하는 데이터
+----
 
 
 ## 🚀 실행 방법
 
-### 1. IDE에서 `FlowExtensionBlockingApplication` 클래스 실행
+### 1. IDE에서 실행
+`FlowExtensionBlockingApplication` 클래스 실행
 
 ### 2. DB 확인
+서버 실행 후 H2 Console `http://localhost:8080/h2-console`로 접속 
 
-서버 실행 후 다음 URL로 접속:
-- H2 Console: `http://localhost:8080/h2-console`
+---
 
 ## 📡 API 엔드포인트
 
@@ -363,6 +340,10 @@ public class CorsConfig implements WebMvcConfigurer {
   - 커스텀 확장자 삭제
   - 에러: 404 Not Found (존재하지 않는 확장자)
 
+
+----
+
+
 ## 📝 주요 설계 내용
 
 ### 1. 계층형 아키텍처
@@ -378,6 +359,7 @@ public class CorsConfig implements WebMvcConfigurer {
 - 반복적인 CRUD 코드 제거
 - 메서드 네이밍 컨벤션으로 쿼리 자동 생성
 
+
 ### 3. Lombok 사용
 
 - `@RequiredArgsConstructor`: 생성자 자동 생성
@@ -385,15 +367,18 @@ public class CorsConfig implements WebMvcConfigurer {
 - `@Getter`, `@Setter`: Getter/Setter 자동 생성
 - 코드 가독성 및 유지보수성 향상
 
+
 ### 4. 초기 데이터 자동 생성
 
 - `ApplicationRunner`를 사용하여 애플리케이션 시작 시 자동 실행
 - `@Profile("dev")`로 개발 환경에서만 실행
 - `@Transactional`로 트랜잭션 보장
 
+
 ### 5. RESTful API 설계
 
 - 리소스 중심 URL 설계 (`/api/extensions/fixed`, `/api/extensions/custom`)
 - 적절한 HTTP 메서드 사용 (GET, POST, DELETE)
 - 명확한 HTTP 상태 코드 반환
+
 
