@@ -38,9 +38,21 @@ public class ExtensionController {
 
     // 커스텀 확장자 목록 조회
     @GetMapping("/custom")
-    public ResponseEntity<List<CustomExtensionResponseDto>> getCustomExtensions() {
-        List<CustomExtensionResponseDto> extensions = customExtensionService.getAllCustomExtensions();
-        return ResponseEntity.ok(extensions);
+    public ResponseEntity<?> getCustomExtensions() {
+        try {
+            List<CustomExtensionResponseDto> extensions = customExtensionService.getAllCustomExtensions();
+            return ResponseEntity.ok(extensions);
+        } catch (Exception e) {
+            // 로그 출력 (실제 운영 환경에서는 로깅 프레임워크 사용)
+            e.printStackTrace();
+            // JSON 형식으로 오류 반환
+            java.util.Map<String, String> errorResponse = new java.util.HashMap<>();
+            errorResponse.put("error", "커스텀 확장자 조회 중 오류가 발생했습니다");
+            errorResponse.put("message", e.getMessage() != null ? e.getMessage() : "알 수 없는 오류");
+            errorResponse.put("type", e.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
     }
 
     // 커스텀 확장자 추가
