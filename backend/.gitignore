@@ -1,0 +1,14 @@
+# Gradle
+.gradle/
+build/
+
+# IntelliJ
+.idea/
+*.iml
+
+# H2 / local DB
+*.mv.db
+*.trace.db
+
+# OS
+.DS_Store
