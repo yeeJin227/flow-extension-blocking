@@ -50,9 +50,10 @@ backend/
 
 ## ✨ 구현된 기능
 
-### 1. 고정확장자 초기데이터(initdata) 생성
+### 1. 고정 확장자 초기 데이터(initdata) 생성
 
-**요구사항**: 고정 확장자는 차단을 자주하는 확장자들 리스트이며, default는 unCheck 되어져 있습니다.
+**요구사항**: 
+- 고정 확장자는 차단을 자주하는 확장자들 리스트이며, default는 unCheck 되어져 있습니다.
 
 **구현 내용**:
 - 애플리케이션 시작 시 `DevInitData`에서 자동으로 고정 확장자 7개 생성
@@ -78,9 +79,12 @@ public void createFixedExtensions() {
 }
 ```
 
-### 2. 고정확장자의 체크상태를 DB에 저장, 유지
 
-**요구사항**: 고정 확장자를 check or uncheck를 할 경우 db에 저장됩니다. 이는 새로고침 시 유지되어야 합니다.
+
+### 2. 고정 확장자의 체크 상태를 DB에 저장, 유지
+
+**요구사항**: 
+- 고정 확장자를 check or uncheck를 할 경우 db에 저장됩니다. 이는 새로고침 시 유지되어야 합니다.
 
 **구현 내용**:
 - `POST /api/extensions/fixed` 엔드포인트로 체크 상태 업데이트
@@ -122,9 +126,12 @@ public FixedExtensionResponseDto updateFixedExtension(FixedExtensionRequestDto r
 }
 ```
 
-### 3. 커스텀확장자 최대 입력 길이 20자로 제한
 
-**요구사항**: 확장자 최대 입력 길이는 20자리
+
+### 3. 커스텀 확장자 최대 입력 길이 20자로 제한
+
+**요구사항**: 
+- 확장자 최대 입력 길이는 20자리
 
 **구현 내용**:
 - `CustomExtension` 엔티티의 `customExtensionName` 필드에 `length = 20` 제약 조건 설정
@@ -144,9 +151,10 @@ if (customExtensionName.length() > 20) {
 }
 ```
 
-### 4. 커스텀확장자 DB에 추가 및 저장
+### 4. 커스텀 확장자 DB에 추가 및 저장
 
-**요구사항**: 추가 버튼 클릭 시, db에 저장되며 아래쪽 영역에 표현됩니다.
+**요구사항**: 
+- 추가 버튼 클릭 시, db에 저장되며 아래쪽 영역에 표현됩니다.
 
 **구현 내용**:
 - `POST /api/extensions/custom` 엔드포인트로 커스텀 확장자 추가
@@ -170,9 +178,10 @@ public CustomExtensionResponseDto addCustomExtension(CustomExtensionRequestDto r
 }
 ```
 
-### 5. 커스텀확장자 최대 개수 200개로 제한
+### 5. 커스텀 확장자 최대 개수 200개로 제한
 
-**요구사항**: 커스텀 확장자는 최대 200개까지 추가가 가능
+**요구사항**: 
+- 커스텀 확장자는 최대 200개까지 추가가 가능
 
 **구현 내용**:
 - Service 레이어에서 `customExtensionRepository.count()`로 현재 개수 확인
@@ -190,7 +199,8 @@ if (customExtensionRepository.count() >= MAX_CUSTOM_EXTENSION_COUNT) {
 
 ### 6. X를 클릭하면 커스텀확장자 DB에서 삭제
 
-**요구사항**: 확장자 옆 x를 클릭 시 db에서 삭제됨
+**요구사항**: 
+- 확장자 옆 x를 클릭 시 db에서 삭제됨
 
 **구현 내용**:
 - `DELETE /api/extensions/custom/{customExtensionName}` 엔드포인트로 삭제
@@ -213,7 +223,8 @@ public void deleteCustomExtension(String customExtensionName) {
 
 ### 1. 입력값 정규화하여 중복 체크
 
-**구현 이유**: 웹 애플리케이션 관점에서는 'EXE'나 'exe'나 모두 차단 대상이므로 입력받은 확장자를 소문자로 통일하여 중복 체크를 편리하게 하고, DB에 모든 확장자를 일관된 형식으로 저장시키기 위해서 적용
+**구현 이유**: 
+- 웹 애플리케이션 관점에서는 'EXE'나 'exe'나 모두 차단 대상이므로 입력받은 확장자를 소문자로 통일하여 중복 체크를 편리하게 하고, DB에 모든 확장자를 일관된 형식으로 저장시키기 위해서 적용
 
 **구현 내용**:
 - 입력값을 `toLowerCase()`로 소문자 변환, `trim()`으로 앞뒤 공백 제거하여 DB에 저장
@@ -233,7 +244,8 @@ if (customExtensionRepository.findByCustomExtensionName(customExtensionName).isP
 
 ### 2. 데이터베이스 제약 조건
 
-**구현 이유**: 애플리케이션 레벨 검증을 우회하더라도 데이터베이스에서 데이터 무결성 보장하기 위해
+**구현 이유**: 
+- 애플리케이션 레벨 검증을 우회하더라도 데이터베이스에서 데이터 무결성 보장하기 위해
 
 **구현 내용**:
 - `@Column(unique = true)`로 데이터베이스 레벨에서 중복 방지
@@ -248,7 +260,7 @@ if (customExtensionRepository.findByCustomExtensionName(customExtensionName).isP
 - 읽기 전용 트랜잭션 (`@Transactional(readOnly = true)`)으로 성능 최적화
 - 쓰기 작업 시에만 쓰기 트랜잭션 사용
 
-**코드 예시**:
+**코드**:
 ```java
 @Service
 @RequiredArgsConstructor
@@ -305,7 +317,8 @@ public class CorsConfig implements WebMvcConfigurer {
 
 ### 6. DTO 패턴 사용 
 
-**구현 이유**: Entity를 직접 노출하지 않고 DTO를 통해 데이터 전달로 보안 및 API 변경 시에도 유연성 확보 
+**구현 이유**: 
+- Entity를 직접 노출하지 않고 DTO를 통해 데이터 전달로 보안 및 API 변경 시에도 유연성 확보 
 
 **구현 내용**:
 - Request DTO: 클라이언트로부터 받는 데이터
