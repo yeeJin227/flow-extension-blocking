@@ -4,6 +4,21 @@
 
 <br>
 
+## 🚀 실행 방법 (배포용)
+
+### 2. Frontend
+
+- 배포 URL: https://flow-extension-blocking.vercel.app/
+- 데이터베이스(supabase) 연동 모니터링 URL: https://flow-extension-blocking.vercel.app/test.html
+
+### 1. Backend
+
+- 배포 URL: https://flow-extension-blocking.onrender.com/api
+- 고정 확장자 조회 URL: https://flow-extension-blocking.onrender.com/api/extensions/fixed
+- 커스텀 확장자 조회 URL: https://flow-extension-blocking.onrender.com/api/extensions/custom
+
+<br>
+
 ## 📁 프로젝트 구조
 
 ```
@@ -50,20 +65,6 @@ flow/
    - 에러 처리 및 메시지
    - URL 인코딩 처리
 
-<br>
-
-## 🚀 실행 방법 (배포용)
-
-### 2. Frontend
-
-- 배포 URL: https://flow-extension-blocking.vercel.app/
-- 데이터베이스(supabase) 연동 모니터링 URL: https://flow-extension-blocking.vercel.app/test.html
-
-### 1. Backend
-
-- 배포 URL: https://flow-extension-blocking.onrender.com/api
-- 고정 확장자 조회 URL: https://flow-extension-blocking.onrender.com/api/extensions/fixed
-- 커스텀 확장자 조회 URL: https://flow-extension-blocking.onrender.com/api/extensions/custom
 
 <br>
 
