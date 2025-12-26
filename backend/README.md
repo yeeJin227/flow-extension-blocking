@@ -331,8 +331,8 @@ public class CorsConfig implements WebMvcConfigurer {
 
 ### 2️⃣ 배포 환경
 - Render 배포: https://flow-extension-blocking.onrender.com
-- 데이터베이스 Supabase PostgreSQL
-- Spring Profile: prod, Dockerfile로 빌드 후 자동 실행
+- 데이터베이스 Supabase(PostgreSQL): https://flow-extension-blocking.vercel.app/monitoring.html
+- Spring Boot: Dockerfile로 빌드 후 자동 실행
 
 ---
 
