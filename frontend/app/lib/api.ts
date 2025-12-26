@@ -5,11 +5,18 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://flow-extension-
 
 // 고정 확장자 목록 조회
 export async function getFixedExtensions(): Promise<FixedExtension[]> {
-  const response = await fetch(`${API_BASE_URL}/extensions/fixed`);
-  if (!response.ok) {
-    throw new Error('고정 확장자 조회 실패');
+  try {
+    const response = await fetch(`${API_BASE_URL}/extensions/fixed`);
+    if (!response.ok) {
+      throw new Error(`고정 확장자 조회 실패 (${response.status}): ${response.statusText}`);
+    }
+    return response.json();
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error(`백엔드 서버에 연결할 수 없습니다. URL: ${API_BASE_URL}/extensions/fixed`);
+    }
+    throw error;
   }
-  return response.json();
 }
 
 // 고정 확장자 체크 상태 업데이트
@@ -34,11 +41,18 @@ export async function updateFixedExtension(
 
 // 커스텀 확장자 목록 조회
 export async function getCustomExtensions(): Promise<CustomExtension[]> {
-  const response = await fetch(`${API_BASE_URL}/extensions/custom`);
-  if (!response.ok) {
-    throw new Error('커스텀 확장자 조회 실패');
+  try {
+    const response = await fetch(`${API_BASE_URL}/extensions/custom`);
+    if (!response.ok) {
+      throw new Error(`커스텀 확장자 조회 실패 (${response.status}): ${response.statusText}`);
+    }
+    return response.json();
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error(`백엔드 서버에 연결할 수 없습니다. URL: ${API_BASE_URL}/extensions/custom`);
+    }
+    throw error;
   }
-  return response.json();
 }
 
 // 커스텀 확장자 추가
