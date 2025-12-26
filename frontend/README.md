@@ -144,6 +144,7 @@ await deleteCustomExtension(encodeURIComponent(customExtensionName));
 ```
 
 -----
+<br> 
 
 ## 🎯 요건 이외에 추가로 고려한 사항
 
