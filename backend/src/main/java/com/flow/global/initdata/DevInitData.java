@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
-@Profile("dev")
+@Profile("prod")
 @RequiredArgsConstructor
 public class DevInitData {
 
