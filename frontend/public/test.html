@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DB 상태 실시간 확인</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    .status-bar {
+      background: #f8f9fa;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #e9ecef;
+    }
+    .auto-refresh {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .auto-refresh input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .last-update {
+      color: #6c757d;
+      font-size: 14px;
+    }
+    .content {
+      padding: 30px;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+    .section-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 2px;
+    }
+    .extension-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .extension-item {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+    .extension-item:hover {
+      border-color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+    .extension-name {
+      font-weight: 500;
+      color: #333;
+    }
+    .check-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .check-badge.checked {
+      background: #28a745;
+      color: white;
+    }
+    .check-badge.unchecked {
+      background: #dc3545;
+      color: white;
+    }
+    .custom-extension-item {
+      background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+      border: 2px solid #f39c12;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+    .custom-extension-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+    }
+    .stats {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      flex: 1;
+      min-width: 200px;
+    }
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #f5c6cb;
+      margin: 20px 0;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .refresh-interval {
+      margin-left: 15px;
+      padding: 5px 10px;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      width: 80px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 DB 상태 실시간 확인</h1>
+      <p>Supabase 데이터베이스 상태 모니터링</p>
+    </div>
+    
+    <div class="status-bar">
+      <div class="auto-refresh">
+        <label>
+          <input type="checkbox" id="autoRefresh" checked>
+          자동 새로고침
+        </label>
+        <select id="refreshInterval" class="refresh-interval">
+          <option value="1000">1초</option>
+          <option value="2000">2초</option>
+          <option value="3000" selected>3초</option>
+          <option value="5000">5초</option>
+          <option value="10000">10초</option>
+        </select>
+        <button onclick="fetchData()" style="margin-left: 10px; padding: 5px 15px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+          🔄 수동 새로고침
+        </button>
+        <span id="dataSourceBadge" style="margin-left: 10px; padding: 5px 15px; background: #28a745; color: white; border-radius: 4px; font-size: 12px; font-weight: 600;">
+          📊 데이터 소스
+        </span>
+      </div>
+      <div class="last-update" id="lastUpdate">마지막 업데이트: -</div>
+    </div>
+
+
+    <div class="content">
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <div>데이터를 불러오는 중...</div>
+      </div>
+
+      <div id="error" class="error" style="display: none;"></div>
+
+      <div id="content" style="display: none;">
+        <!-- 고정 확장자 섹션 -->
+        <div class="section">
+          <div class="section-title">고정 확장자</div>
+          <div class="extension-grid" id="fixedExtensions"></div>
+          <div class="stats">
+            <div class="stat-card">
+              <div class="stat-label">전체 개수</div>
+              <div class="stat-value" id="fixedTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">체크된 개수</div>
+              <div class="stat-value" id="fixedChecked">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">체크 안된 개수</div>
+              <div class="stat-value" id="fixedUnchecked">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 커스텀 확장자 섹션 -->
+        <div class="section">
+          <div class="section-title">커스텀 확장자</div>
+          <div class="extension-grid" id="customExtensions"></div>
+          <div class="stats">
+            <div class="stat-card">
+              <div class="stat-label">전체 개수</div>
+              <div class="stat-value" id="customTotal">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">최대 개수</div>
+              <div class="stat-value">200</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Supabase 설정 (환경변수에서 가져오기)
+    let SUPABASE_CONFIG = {
+      url: '',
+      key: '',
+      fixedTable: 'fixed_extension',
+      customTable: 'custom_extension',
+      isConfigured: false
+    };
+    
+    // 백엔드 API 엔드포인트 (Supabase 직접 연결 실패 시 사용)
+    const backendEndpoint = "https://flow-extension-blocking.onrender.com/api/extensions";
+    
+    // 데이터 소스 선택
+    let dataSource = 'backend';
+    
+    let refreshInterval = null;
+    let currentInterval = 3000;
+
+    // 환경변수에서 Supabase 설정 로드
+    async function loadSupabaseConfig() {
+      try {
+        const response = await fetch('/api/supabase-config');
+        const config = await response.json();
+        SUPABASE_CONFIG = config;
+        dataSource = config.isConfigured ? 'supabase' : 'backend';
+        
+        // 배지 업데이트
+        const badge = document.getElementById('dataSourceBadge');
+        if (badge) {
+          badge.textContent = config.isConfigured 
+            ? '📊 Supabase 직접 연결' 
+            : '📊 백엔드 API 사용';
+          badge.style.background = config.isConfigured ? '#28a745' : '#6c757d';
+        }
+      } catch (err) {
+        console.error('Supabase 설정 로드 실패:', err);
+        dataSource = 'backend';
+      }
+    }
+
+    // 페이지 로드 시 초기 데이터 로드
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchData();
+      setupAutoRefresh();
+    });
+
+    // 자동 새로고침 설정
+    function setupAutoRefresh() {
+      const checkbox = document.getElementById('autoRefresh');
+      const intervalSelect = document.getElementById('refreshInterval');
+
+      checkbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          startAutoRefresh();
+        } else {
+          stopAutoRefresh();
+        }
+      });
+
+      intervalSelect.addEventListener('change', (e) => {
+        currentInterval = parseInt(e.target.value);
+        if (checkbox.checked) {
+          stopAutoRefresh();
+          startAutoRefresh();
+        }
+      });
+    }
+
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      refreshInterval = setInterval(fetchData, currentInterval);
+    }
+
+    function stopAutoRefresh() {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+      }
+    }
+
+    // Supabase에서 직접 데이터 가져오기
+    async function fetchFromSupabase() {
+      if (!SUPABASE_CONFIG.isConfigured) {
+        throw new Error('Supabase 설정이 필요합니다. Vercel 환경변수를 확인하세요.');
+      }
+
+      const fixedUrl = `${SUPABASE_CONFIG.url}/rest/v1/${SUPABASE_CONFIG.fixedTable}?select=*`;
+      const customUrl = `${SUPABASE_CONFIG.url}/rest/v1/${SUPABASE_CONFIG.customTable}?select=*`;
+
+      const [fixedRes, customRes] = await Promise.all([
+        fetch(fixedUrl, {
+          headers: {
+            'apikey': SUPABASE_CONFIG.key,
+            'Authorization': `Bearer ${SUPABASE_CONFIG.key}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch(customUrl, {
+          headers: {
+            'apikey': SUPABASE_CONFIG.key,
+            'Authorization': `Bearer ${SUPABASE_CONFIG.key}`,
+            'Content-Type': 'application/json'
+          }
+        })
+      ]);
+
+      if (!fixedRes.ok) {
+        const errorText = await fixedRes.text();
+        throw new Error(`고정 확장자 조회 실패 (${fixedRes.status}): ${errorText}`);
+      }
+      if (!customRes.ok) {
+        const errorText = await customRes.text();
+        throw new Error(`커스텀 확장자 조회 실패 (${customRes.status}): ${errorText}`);
+      }
+
+      const fixedData = await fixedRes.json();
+      const customData = await customRes.json();
+
+      // Supabase 응답을 프론트엔드 형식에 맞게 변환
+      return {
+        fixed: fixedData.map(item => ({
+          id: item.id,
+          fixExtensionName: item.fix_extension_name || item.fixExtensionName,
+          isCheck: item.is_check !== undefined ? item.is_check : item.isCheck
+        })),
+        custom: customData.map(item => ({
+          id: item.id,
+          customExtensionName: item.custom_extension_name || item.customExtensionName
+        }))
+      };
+    }
+
+    // 백엔드 API에서 데이터 가져오기
+    async function fetchFromBackend() {
+      const [fixedRes, customRes] = await Promise.all([
+        fetch(`${backendEndpoint}/fixed`),
+        fetch(`${backendEndpoint}/custom`)
+      ]);
+
+      if (!fixedRes.ok || !customRes.ok) {
+        throw new Error('API 요청 실패');
+      }
+
+      const fixedData = await fixedRes.json();
+      const customData = await customRes.json();
+
+      return { fixed: fixedData, custom: customData };
+    }
+
+    // 데이터 가져오기 (소스에 따라)
+    async function fetchData() {
+      const loadingEl = document.getElementById('loading');
+      const errorEl = document.getElementById('error');
+      const contentEl = document.getElementById('content');
+
+      try {
+        loadingEl.style.display = 'block';
+        errorEl.style.display = 'none';
+        contentEl.style.display = 'none';
+
+        let data;
+        if (dataSource === 'supabase') {
+          data = await fetchFromSupabase();
+        } else {
+          data = await fetchFromBackend();
+        }
+
+        displayData(data.fixed, data.custom);
+        updateLastUpdateTime();
+
+        loadingEl.style.display = 'none';
+        contentEl.style.display = 'block';
+      } catch (err) {
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'block';
+        errorEl.innerHTML = `
+          <strong>오류 발생:</strong> ${err.message}<br><br>
+          ${dataSource === 'supabase' 
+            ? 'Supabase 설정을 확인하거나, Supabase에서 RLS 정책을 설정했는지 확인하세요.' 
+            : '백엔드 API 연결을 확인하세요.'}
+        `;
+        console.error('Error:', err);
+      }
+    }
+
+    // 데이터 표시
+    function displayData(fixedData, customData) {
+      // 고정 확장자 표시
+      const fixedContainer = document.getElementById('fixedExtensions');
+      fixedContainer.innerHTML = '';
+      
+      const checkedCount = fixedData.filter(ext => ext.isCheck).length;
+      const uncheckedCount = fixedData.length - checkedCount;
+
+      fixedData.forEach(ext => {
+        const item = document.createElement('div');
+        item.className = 'extension-item';
+        item.innerHTML = `
+          <span class="extension-name">${ext.fixExtensionName}</span>
+          <span class="check-badge ${ext.isCheck ? 'checked' : 'unchecked'}">
+            ${ext.isCheck ? '✓' : '✗'}
+          </span>
+        `;
+        fixedContainer.appendChild(item);
+      });
+
+      document.getElementById('fixedTotal').textContent = fixedData.length;
+      document.getElementById('fixedChecked').textContent = checkedCount;
+      document.getElementById('fixedUnchecked').textContent = uncheckedCount;
+
+      // 커스텀 확장자 표시
+      const customContainer = document.getElementById('customExtensions');
+      customContainer.innerHTML = '';
+
+      if (customData.length === 0) {
+        customContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #6c757d; padding: 40px;">커스텀 확장자가 없습니다.</div>';
+      } else {
+        customData.forEach(ext => {
+          const item = document.createElement('div');
+          item.className = 'custom-extension-item';
+          item.innerHTML = `
+            <span class="extension-name">${ext.customExtensionName}</span>
+            <span style="color: #e74c3c; font-weight: bold;">●</span>
+          `;
+          customContainer.appendChild(item);
+        });
+      }
+
+      document.getElementById('customTotal').textContent = customData.length;
+    }
+
+    // 마지막 업데이트 시간 표시
+    function updateLastUpdateTime() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('ko-KR', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+      });
+      document.getElementById('lastUpdate').textContent = `마지막 업데이트: ${timeString}`;
+    }
+
+    // 페이지 로드 시 초기 데이터 로드
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Supabase 설정 로드
+      await loadSupabaseConfig();
+      
+      // 데이터 로드 및 자동 새로고침 설정
+      fetchData();
+      setupAutoRefresh();
+    });
+
+    // 자동 새로고침 시작
+    if (document.getElementById('autoRefresh').checked) {
+      startAutoRefresh();
+    }
+  </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import { FixedExtension, CustomExtension } from '@/app/types/extension';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+// 환경변수가 없으면 Render 백엔드 URL 사용 (프로덕션 기본값)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://flow-extension-blocking.onrender.com/api';
 
 // 고정 확장자 목록 조회
 export async function getFixedExtensions(): Promise<FixedExtension[]> {
