@@ -16,11 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Profile("prod")
 @RequiredArgsConstructor
-public class DevInitData {
+public class ProdInitData {
 
     @Autowired
     @Lazy
-    private DevInitData self;
+    private ProdInitData self;
     private final FixedExtensionRepository fixedExtensionRepository;
 
     @Bean
